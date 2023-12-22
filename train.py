@@ -110,7 +110,7 @@ if __name__ == "__main__":
     resnet50 = torchvision.models.resnet50(progress=True, weights=torchvision.models.ResNet50_Weights.DEFAULT)
 
     # Model
-    model = models.JointModel2(resnet50, bert).to(device)
+    model = models.JointModel(resnet50, bert).to(device)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
     # Metrics
