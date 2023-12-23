@@ -1,0 +1,23 @@
+A. Data preprocessing
+1. Không sử dụng dữ liệu ở users.dat và ratings.dat
+2. Loại bỏ dữ liệu của các phim không có ảnh trong cả 2 tập train và test
+3. Xử lí dữ liệu ảnh + text
+- Title
+	+ Loại bỏ năm ở cuối
+	+ Trong 1 số title, a, an, the bị đặt xuống cuối, ví dụ House of Yes, The (1997) --> đảo lại lên đầu
+- Image
+	+ Resize về 224 x 224
+	+ Scale pixel (chia tất cả pixel) cho 255
+	+ Normalization để các pixel có mean=0, std=1
+4. Xử lí label: Mã hóa one-hot cho các genre
+5. Chia dữ liệu train thành train + validation: lấy 0.15 dữ liệu trong movies_train làm validation, còn lại để train
+
+B. Model
+BERT + ResNet50 (pretrained)
+
+C. Kết quả cuối cùng:
+Macro:
+{'MultilabelF1Score': tensor(0.3240, device='cuda:0'),
+ 'MultilabelPrecision': tensor(0.3685, device='cuda:0'),
+ 'MultilabelRecall': tensor(0.2970, device='cuda:0'),
+ 'MultilabelAccuracy': tensor(0.9111, device='cuda:0')}

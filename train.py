@@ -30,6 +30,8 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=30, help="Number of epochs to train")
     parser.add_argument("--learning-rate", type=float, default=1e-5,
                         help="the learning rate of the optimizer")
+    parser.add_argument("--language-model", type=str, default="distilbert-base-uncased",
+                        help="Language model used for movie title processing from HuggingFace transformers")
     parser.add_argument('--track', default=False, action=argparse.BooleanOptionalAction,
                         help="if toggled, this run will be tracked with Weights and Biases")
     parser.add_argument("--wandb-project-name", type=str, default="ML_MovieLens",
@@ -40,7 +42,7 @@ def parse_args():
     return args
 
 
-def data_loader(movies_train, movies_test, genres, batch_size=8, validation_ratio=0.1, shuffle=True):
+def data_loader(movies_train, movies_test, genres, tokenizer, batch_size=8, validation_ratio=0.1, shuffle=True):
     def crop_square(img):
         return transforms.functional.crop(img, 0, 0, img.width, img.width)
     
@@ -55,7 +57,6 @@ def data_loader(movies_train, movies_test, genres, batch_size=8, validation_rati
         transforms.ToTensor(),
         normalize
     ])
-    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
     train_set = datasets.MovieLensDataset(movies_train, genres, tokenizer=tokenizer, transform=transform)
     valid_set = datasets.MovieLensDataset(movies_train, genres, tokenizer=tokenizer, transform=transform)
@@ -103,14 +104,18 @@ if __name__ == "__main__":
     # Load data
     movies_train, movies_test = datasets.load_data_frames()
     genres = datasets.load_genres()
-    train_loader, valid_loader, test_loader = data_loader(movies_train, movies_test, genres)
+    tokenizer = AutoTokenizer.from_pretrained(args.language_model)
+    train_loader, valid_loader, test_loader = data_loader(movies_train, movies_test, genres,
+                                                          tokenizer, batch_size=args.batch_size, 
+                                                          validation_ratio=args.validation_ratio,
+                                                          shuffle=args.shuffle)
 
     # Pretrained models
-    bert = AutoModel.from_pretrained("distilbert-base-uncased")
+    bert = AutoModel.from_pretrained(args.language_model)
     resnet50 = torchvision.models.resnet50(progress=True, weights=torchvision.models.ResNet50_Weights.DEFAULT)
 
     # Model
-    model = models.JointModel(resnet50, bert).to(device)
+    model = models.JointModel(resnet50, bert, num_classes=len(genres)).to(device)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
     # Metrics
