@@ -118,6 +118,8 @@ if __name__ == "__main__":
     model = models.JointModel(resnet50, bert, num_classes=len(genres)).to(device)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', factor=0.5,
+                                                           patience=3, min_lr=1e-6, verbose=True)
     # Metrics
     train_metrics = MetricCollection([
         MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='macro'),
@@ -188,6 +190,7 @@ if __name__ == "__main__":
         writer.add_scalar("losses/valid_loss", loss.item(), e)
         total_train_metrics = train_metrics.compute()
         total_valid_metrics = valid_metrics.compute()
+        scheduler.step(total_valid_metrics['MultilabelF1Score'].cpu().item())
         for k, v in total_train_metrics.items():
             metric_name = k.replace('Multilabel', '').lower()
             writer.add_scalar(f"metrics/train_{metric_name}", v.item(), e)
