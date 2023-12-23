@@ -22,6 +22,7 @@ from utils import *
 def parse_args():
     # fmt: off
     parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=42, help="seed of the experiment")
     parser.add_argument("--validation-ratio", type=float, default=0.1,
                         help="how much to split train/validation dataset")
     parser.add_argument('--shuffle', default=False, action=argparse.BooleanOptionalAction,
@@ -99,6 +100,9 @@ if __name__ == "__main__":
         datasets.download()
     args = parse_args()
     print(vars(args))
+    # Set seed
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Load data
@@ -197,8 +201,8 @@ if __name__ == "__main__":
             writer.add_scalar(f"metrics/validation_{metric_name}", total_valid_metrics[k].item(), e)
 
         print(f"\tValidation loss: {loss.item()}")
-        print(f"\tTrain: {print_metrics(total_train_metrics)}")
-        print(f"\tValidation: {print_metrics(total_valid_metrics)}")
+        print(f"\tTrain: {pretty_metrics(total_train_metrics)}")
+        print(f"\tValidation: {pretty_metrics(total_valid_metrics)}")
         print()
 
         del input_ids, attention_mask, img_tensor
@@ -208,6 +212,9 @@ if __name__ == "__main__":
         valid_metrics.reset()
 
     test_result = evaluate(model, test_loader, test_metrics, device)
+    writer.add_text("test_result", str(pretty_metrics(test_result)))
+    print("Test result:")
+    print(pretty_metrics(test_result))
     writer.close()
     if args.track:
         wandb.finish()
