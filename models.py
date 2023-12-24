@@ -30,7 +30,7 @@ class JointModelv2(nn.Module):
     def __init__(self, image_model, text_model, num_classes=18):
         super(JointModel, self).__init__()
         self.image_model = image_model
-        del self.image_model.fc
+        self.image_model.fc = nn.Identity()
         self.text_model = text_model
         self.f_image = nn.Linear(2048, 768)
         # self.f_text = nn.Linear(text_model.config.hidden_size, 256)
