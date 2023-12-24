@@ -55,8 +55,6 @@ def parse_args():
     parser.add_argument('--likelihood_topk', type=int, default=5)
     parser.add_argument('--prior_path', type=str, default=None)
     parser.add_argument('--prior_threshold', type=float, default=0.05)
-    parser.add_argument('-b', '--batch-size', default=64, type=int,
-                        metavar='N', help='mini-batch size (default: 64)')
     parser.add_argument('--print-freq', '-p', default=64, type=int,
                         metavar='N', help='print frequency (default: 64)')
     parser.add_argument('--path_dest', type=str, default="./outputs")
