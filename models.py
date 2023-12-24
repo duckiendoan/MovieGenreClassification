@@ -55,7 +55,7 @@ class JointModelv2(nn.Module):
         out = self.fc(x)
         return out
 
-from ml_decoder import add_ml_decoder_head
+from experiments.ml_decoder import add_ml_decoder_head
 
 class ImageOnlyModel(nn.Module):
     def __init__(self, image_model, text_model, num_classes=18):

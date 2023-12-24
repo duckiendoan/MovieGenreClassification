@@ -19,6 +19,7 @@ import datasets
 import models
 from utils import *
 from experiments.losses import AsymmetricLossOptimized
+from experiments.partial_asymmetric_loss import PartialSelectiveLoss, ComputePrior
 
 def parse_args():
     # fmt: off
@@ -40,6 +41,27 @@ def parse_args():
                         help="if toggled, this run will be tracked with Weights and Biases")
     parser.add_argument("--wandb-project-name", type=str, default="ML_MovieLens",
                         help="the wandb's project name")
+    
+    parser.add_argument('--simulate_partial_type', type=str, default=None, help="options are fpc or rps")
+    parser.add_argument('--simulate_partial_param', type=float, default=1000)
+    parser.add_argument('--partial_loss_mode', type=str, default="negative")
+    parser.add_argument('--clip', type=float, default=0)
+    parser.add_argument('--gamma_pos', type=float, default=0)
+    parser.add_argument('--gamma_neg', type=float, default=1)
+    parser.add_argument('--gamma_unann', type=float, default=2)
+    parser.add_argument('--alpha_pos', type=float, default=1)
+    parser.add_argument('--alpha_neg', type=float, default=1)
+    parser.add_argument('--alpha_unann', type=float, default=1)
+    parser.add_argument('--likelihood_topk', type=int, default=5)
+    parser.add_argument('--prior_path', type=str, default=None)
+    parser.add_argument('--prior_threshold', type=float, default=0.05)
+    parser.add_argument('-b', '--batch-size', default=64, type=int,
+                        metavar='N', help='mini-batch size (default: 64)')
+    parser.add_argument('--print-freq', '-p', default=64, type=int,
+                        metavar='N', help='print frequency (default: 64)')
+    parser.add_argument('--path_dest', type=str, default="./outputs")
+    parser.add_argument('--debug_mode', type=str, default="hyperml")
+
 
     args, unknowns = parser.parse_known_args()
     # fmt: on
@@ -126,7 +148,9 @@ if __name__ == "__main__":
     print(f"Using {model_class.__name__}")
     model = model_class(resnet50, bert, num_classes=len(genres)).to(device)
     # loss_fn = nn.BCEWithLogitsLoss()
-    loss_fn = AsymmetricLossOptimized()
+    prior = ComputePrior({i:v for i, v in enumerate(genres)})
+    loss_fn = PartialSelectiveLoss(args)
+    
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', factor=0.5,
                                                            patience=3, min_lr=1e-6, verbose=True)
@@ -182,10 +206,13 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            prior.update(out)
 
             writer.add_scalar("losses/train_loss", loss.item(), global_step)
 
         print(f"\tTrain loss: {loss.item()}")
+        prior.save_prior()
+        prior.get_top_freq_classes()
         model.eval()
         # VALIDATION LOOP
         for input_ids, attention_mask, img_tensor, label in valid_loader:
