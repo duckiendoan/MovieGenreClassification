@@ -49,7 +49,7 @@ def parse_args():
 def data_loader(movies_train, movies_test, genres, tokenizer, batch_size=8, validation_ratio=0.1, shuffle=True):
     def crop_square(img):
         return transforms.functional.crop(img, 0, 0, img.width, img.width)
-    
+    # Computed using utils.compute_mean_std
     mean = [0.50248874, 0.43833769, 0.412207]
     std = [0.36760546, 0.35544249, 0.34853585]
     normalize = transforms.Normalize(mean=mean, std=std)
@@ -71,7 +71,6 @@ def data_loader(movies_train, movies_test, genres, tokenizer, batch_size=8, vali
     split = int(np.floor(validation_ratio * num_train))
 
     if shuffle:
-        np.random.seed(42)
         np.random.shuffle(indices)
 
     train_idx, valid_idx = indices[split:], indices[:split]

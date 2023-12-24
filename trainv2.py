@@ -91,7 +91,6 @@ def data_loader(movies_train, movies_test, genres, tokenizer, batch_size=8, vali
     split = int(np.floor(validation_ratio * num_train))
 
     if shuffle:
-        np.random.seed(42)
         np.random.shuffle(indices)
 
     train_idx, valid_idx = indices[split:], indices[:split]
