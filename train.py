@@ -119,7 +119,7 @@ if __name__ == "__main__":
     resnet50 = torchvision.models.resnet50(progress=True, weights=torchvision.models.ResNet50_Weights.DEFAULT)
 
     # Model
-    model = models.JointModelv2(resnet50, bert, num_classes=len(genres)).to(device)
+    model = models.ImageOnlyModel(resnet50, bert, num_classes=len(genres)).to(device)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', factor=0.5,

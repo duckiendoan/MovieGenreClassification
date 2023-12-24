@@ -28,7 +28,7 @@ class JointModel(nn.Module):
     
 class JointModelv2(nn.Module):
     def __init__(self, image_model, text_model, num_classes=18):
-        super(JointModel, self).__init__()
+        super(JointModelv2, self).__init__()
         self.image_model = image_model
         self.image_model.fc = nn.Identity()
         self.text_model = text_model
@@ -53,4 +53,15 @@ class JointModelv2(nn.Module):
         x2 = text_feature[:, 0, :]
         x = torch.cat([x1, x2], dim=1)
         out = self.fc(x)
+        return out
+
+from ml_decoder import add_ml_decoder_head
+
+class ImageOnlyModel(nn.Module):
+    def __init__(self, image_model, text_model, num_classes=18):
+        super(ImageOnlyModel, self).__init__()
+        self.image_model = add_ml_decoder_head(image_model, num_classes)
+
+    def forward(self, input_ids, attention_mask, image):
+        out = self.image_model(image)
         return out
