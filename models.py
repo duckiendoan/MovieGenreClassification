@@ -14,7 +14,7 @@ class JointModel(nn.Module):
             nn.ReLU(),
             # nn.Dropout(p=0.3),
             nn.Linear(256, num_classes),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
 
     def forward(self, input_ids, attention_mask, image):
@@ -42,7 +42,7 @@ class JointModelv2(nn.Module):
             nn.Dropout(p=0.3),
             nn.ReLU(),
             nn.Linear(256, num_classes),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
 
     def forward(self, input_ids, attention_mask, image):
