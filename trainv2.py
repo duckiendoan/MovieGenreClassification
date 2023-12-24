@@ -41,6 +41,10 @@ def parse_args():
                         help="if toggled, this run will be tracked with Weights and Biases")
     parser.add_argument("--wandb-project-name", type=str, default="ML_MovieLens",
                         help="the wandb's project name")
+    parser.add_argument("--save-model", default=False, action=argparse.BooleanOptionalAction,
+                        help="whether to save model after training")
+    parser.add_argument("--model-path", type=str, default=None,
+                        help="the path to load model from")
     
     parser.add_argument('--simulate_partial_type', type=str, default=None, help="options are fpc or rps")
     parser.add_argument('--simulate_partial_param', type=float, default=1000)
@@ -151,6 +155,11 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', factor=0.5,
                                                            patience=3, min_lr=1e-6, verbose=True)
+    if args.model_path is not None:
+        print(f"Loading mode from {args.model_path}")
+        checkpoint = torch.load(args.model_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     # Metrics
     train_metrics = MetricCollection([
         MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='macro'),
@@ -248,6 +257,15 @@ if __name__ == "__main__":
     writer.add_text("test_result", str(pretty_metrics(test_result)))
     print("Test result:")
     print(pretty_metrics(test_result))
+    if args.save_model:
+        print("Saving model...")
+        # Save model
+        torch.save({
+            'epoch': args.epochs,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+        }, f"{model_class.__name__}_{datetime.now().strftime('%d-%m-%Y %H-%M-%S').replace('', '_')}.pth")
     writer.close()
     if args.track:
         wandb.finish()
