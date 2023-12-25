@@ -55,13 +55,24 @@ class JointModelv2(nn.Module):
         out = self.fc(x)
         return out
 
-from experiments.ml_decoder import add_ml_decoder_head
-
 class ImageOnlyModel(nn.Module):
     def __init__(self, image_model, text_model, num_classes=18):
         super(ImageOnlyModel, self).__init__()
-        self.image_model = add_ml_decoder_head(image_model, num_classes)
-
+        self.image_model = image_model
+        self.image_model.fc = nn.Identity()
+        self.fc = nn.Sequential(
+            nn.Linear(2048, 512),
+            nn.Dropout(p=0.1),
+            nn.ReLU(),
+            # nn.Dropout(p=0.2),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            # nn.Dropout(p=0.3),
+            nn.Linear(256, num_classes),
+            # nn.Sigmoid()
+        )
+    
     def forward(self, input_ids, attention_mask, image):
-        out = self.image_model(image)
+        x = self.image_model(image)
+        out = self.fc(x)
         return out
