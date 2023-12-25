@@ -101,7 +101,7 @@ def evaluate(model, dataloader, device):
         MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='micro'),
         MultilabelRecall(num_labels=len(genres), threshold=0.5, average='micro'),
         MultilabelAccuracy(num_labels=len(genres), threshold=0.5, average='micro')
-    ])
+    ]).to(device)
 
     for input_ids, attention_mask, img_tensor, label in dataloader:
         with torch.no_grad():
