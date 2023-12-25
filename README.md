@@ -74,9 +74,9 @@ python train.py --no-asl --model JointModel --epochs 40
 ```
 - ResNet50 + ASL
 ```sh
-python train.py --asl --model ImageOnlymodel --epochs 40
+python train.py --asl --model ImageOnlyModel --epochs 40
 ```
 - ResNet50 + BCE
 ```sh
-python train.py --no-asl --model ImageOnlymodel --epochs 40
+python train.py --no-asl --model ImageOnlyModel --epochs 40
 ```
