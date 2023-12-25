@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
@@ -93,12 +94,14 @@ def evaluate(model, dataloader, device):
         MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='macro'),
         MultilabelRecall(num_labels=len(genres), threshold=0.5, average='macro'),
         MultilabelAccuracy(num_labels=len(genres), threshold=0.5, average='macro'),
+    ]).to(device)
 
+    micro_avg_metrics = MetricCollection([
         MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='micro'),
         MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='micro'),
         MultilabelRecall(num_labels=len(genres), threshold=0.5, average='micro'),
         MultilabelAccuracy(num_labels=len(genres), threshold=0.5, average='micro')
-    ]).to(device)
+    ])
 
     for input_ids, attention_mask, img_tensor, label in dataloader:
         with torch.no_grad():
@@ -108,8 +111,11 @@ def evaluate(model, dataloader, device):
             label = label.to(device)
 
             out = model(input_ids, attention_mask, img_tensor)
+            out = F.sigmoid(out)
             test_metrics.update(out, label)
-    return test_metrics.compute()
+            micro_avg_metrics.update(out, label)
+    
+    return test_metrics.compute(), micro_avg_metrics.compute()
 
 if __name__ == "__main__":
     if not os.path.exists("./ml1m"):
@@ -207,6 +213,7 @@ if __name__ == "__main__":
 
             with torch.no_grad():
                 out = model(input_ids, attention_mask, img_tensor)
+                out = F.sigmoid(out)
                 loss = loss_fn(out, label)
                 valid_metrics.update(out, label)
 
@@ -231,10 +238,14 @@ if __name__ == "__main__":
         train_metrics.reset()
         valid_metrics.reset()
 
-    test_result = evaluate(model, test_loader, device)
-    writer.add_text("test_result", str(pretty_metrics(test_result)))
+    macro_test_result, micro_test_result = evaluate(model, test_loader, device)
+    writer.add_text("macro_test_result", str(pretty_metrics(macro_test_result)))
+    writer.add_text("micro_test_result", str(pretty_metrics(micro_test_result)))
     print("Test result:")
-    print(pretty_metrics(test_result))
+    print("Macro")
+    print(pretty_metrics(macro_test_result))
+    print("Micro")
+    print(pretty_metrics(micro_test_result))
     if args.save_model:
         print("Saving model...")
         # Save model
