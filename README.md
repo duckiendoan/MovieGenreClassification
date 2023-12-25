@@ -1,4 +1,5 @@
-# INT3405E Project
+# INT3405E Project - Group 25
+
 **Dataset**: Modified [MovieLens](https://grouplens.org/datasets/movielens/). You can download the dataset [here](https://drive.google.com/uc?id=1hUqu1mbFeTEfBvl-7fc56fHFfCSzIktD).
 
 ## Installation
