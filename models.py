@@ -37,9 +37,9 @@ class JointModelv2(nn.Module):
         self.fc = nn.Sequential(
             # nn.Dropout(p=0.2),
             nn.Linear(768 * 2, 512),
+            nn.Dropout(p=0.2),
             nn.ReLU(),
             nn.Linear(512, 256),
-            nn.Dropout(p=0.3),
             nn.ReLU(),
             nn.Linear(256, num_classes),
             # nn.Sigmoid()
