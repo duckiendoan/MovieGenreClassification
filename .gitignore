@@ -197,3 +197,4 @@ pyrightconfig.json
 ml1m.zip
 ml1m/
 runs/
+wandb/

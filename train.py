@@ -49,6 +49,15 @@ def parse_args():
     # fmt: on
     return args
 
+def seed(seed):
+    import random
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 def data_loader(movies_train, movies_test, genres, tokenizer, batch_size=8, validation_ratio=0.1, shuffle=True):
     def crop_square(img):
@@ -123,8 +132,7 @@ if __name__ == "__main__":
     args = parse_args()
     print(vars(args))
     # Set seed
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
+    seed(args.seed)
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Load data
