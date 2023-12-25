@@ -86,9 +86,20 @@ def data_loader(movies_train, movies_test, genres, tokenizer, batch_size=8, vali
 
     return train_loader, valid_loader, test_loader
 
-def evaluate(model, dataloader, metric, device):
+def evaluate(model, dataloader, device):
     model.eval()
-    
+    test_metrics = MetricCollection([
+        MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='macro'),
+        MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='macro'),
+        MultilabelRecall(num_labels=len(genres), threshold=0.5, average='macro'),
+        MultilabelAccuracy(num_labels=len(genres), threshold=0.5, average='macro'),
+
+        MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='micro'),
+        MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='micro'),
+        MultilabelRecall(num_labels=len(genres), threshold=0.5, average='micro'),
+        MultilabelAccuracy(num_labels=len(genres), threshold=0.5, average='micro')
+    ]).to(device)
+
     for input_ids, attention_mask, img_tensor, label in dataloader:
         with torch.no_grad():
             input_ids = input_ids.to(device)
@@ -97,8 +108,8 @@ def evaluate(model, dataloader, metric, device):
             label = label.to(device)
 
             out = model(input_ids, attention_mask, img_tensor)
-            metric.update(out, label)
-    return metric.compute()
+            test_metrics.update(out, label)
+    return test_metrics.compute()
 
 if __name__ == "__main__":
     if not os.path.exists("./ml1m"):
@@ -146,13 +157,6 @@ if __name__ == "__main__":
     ]).to(device)
 
     valid_metrics = MetricCollection([
-        MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='macro'),
-        MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='macro'),
-        MultilabelRecall(num_labels=len(genres), threshold=0.5, average='macro'),
-        MultilabelAccuracy(num_labels=len(genres), threshold=0.5, average='macro')
-    ]).to(device)
-
-    test_metrics = MetricCollection([
         MultilabelF1Score(num_labels=len(genres), threshold=0.5, average='macro'),
         MultilabelPrecision(num_labels=len(genres), threshold=0.5, average='macro'),
         MultilabelRecall(num_labels=len(genres), threshold=0.5, average='macro'),
@@ -227,7 +231,7 @@ if __name__ == "__main__":
         train_metrics.reset()
         valid_metrics.reset()
 
-    test_result = evaluate(model, test_loader, test_metrics, device)
+    test_result = evaluate(model, test_loader, device)
     writer.add_text("test_result", str(pretty_metrics(test_result)))
     print("Test result:")
     print(pretty_metrics(test_result))
